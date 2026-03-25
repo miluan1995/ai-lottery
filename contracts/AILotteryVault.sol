@@ -8,7 +8,7 @@ import {VaultBaseV2, VaultUISchema, VaultMethodSchema, FieldDescriptor, ApproveA
 ///         Oracle draws winner each round; winner must claim within the round.
 contract AILotteryVault is VaultBaseV2 {
     // ── Config ──
-    address public immutable taxToken;
+    address public taxToken;
     address public immutable dev;
     address public oracle; // can call drawWinner
 
@@ -56,10 +56,16 @@ contract AILotteryVault is VaultBaseV2 {
         _;
     }
 
-    constructor(address _taxToken, address _dev, address _oracle) {
-        taxToken = _taxToken;
+    constructor(address _dev, address _oracle) {
         dev = _dev;
         oracle = _oracle;
+    }
+
+    /// @notice Set tax token address (one-time, by dev or factory)
+    function setTaxToken(address _taxToken) external {
+        require(taxToken == address(0), "already set");
+        require(msg.sender == dev || msg.sender == _getGuardian(), "unauthorized");
+        taxToken = _taxToken;
     }
 
     // ── Receive tax BNB ──

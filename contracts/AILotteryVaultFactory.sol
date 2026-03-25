@@ -24,7 +24,8 @@ contract AILotteryVaultFactory is VaultFactoryBaseV2 {
     {
         if (msg.sender != portal) revert OnlyVaultPortal();
         address oracle = abi.decode(vaultData, (address));
-        AILotteryVault v = new AILotteryVault(taxToken, creator, oracle);
+        AILotteryVault v = new AILotteryVault(creator, oracle);
+        v.setTaxToken(taxToken);
         vault = address(v);
         emit VaultCreated(vault, taxToken, creator);
     }
