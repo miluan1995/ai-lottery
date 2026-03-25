@@ -225,10 +225,13 @@ const VAULT_ABI=[
   'function getEstimatedNextPrize() view returns (uint256)',
   'function claim()'
 ];
-const TOKEN_ABI=['function balanceOf(address) view returns (uint256)'];
+const TOKEN_ABI=['function balanceOf(address) view returns (uint256)','function totalSupply() view returns (uint256)'];
+const PORTAL='0xe2cE6ab80874Fa9Fa2aAE65D277Dd6B8e65C9De0';
+const PORTAL_ABI=['function quoteExactInput(tuple(address inputToken,address outputToken,uint256 inputAmount)) view returns (uint256)'];
 const provider=new ethers.JsonRpcProvider(RPC);
 const vault=new ethers.Contract(VAULT_ADDR,VAULT_ABI,provider);
 const token=new ethers.Contract(TOKEN_ADDR,TOKEN_ABI,provider);
+const portal=new ethers.Contract(PORTAL,PORTAL_ABI,provider);
 
 async function checkBonus(){
   const addr=document.getElementById('walletInput').value.trim();
@@ -261,9 +264,34 @@ async function loadOnChainData(){
     document.getElementById('poolBalance').textContent=parseFloat(ethers.formatEther(poolData[0]+poolData[1])).toFixed(4)+' BNB';
     document.getElementById('nextPrize').textContent=parseFloat(ethers.formatEther(estPrize)).toFixed(4)+' BNB';
     document.getElementById('currentRound').textContent=round.toString();
+    // Price & MCap via Portal quote (1 BNB → how many tokens)
+    try{
+      const oneBNB=ethers.parseEther('1');
+      const tokensPerBNB=await portal.quoteExactInput([ethers.ZeroAddress,TOKEN_ADDR,oneBNB]);
+      if(tokensPerBNB>0n){
+        const price=1.0/parseFloat(ethers.formatEther(tokensPerBNB));
+        document.getElementById('price').textContent=price<0.0001?price.toExponential(2):price.toFixed(6)+' BNB';
+        const supply=await token.totalSupply();
+        const mcap=price*parseFloat(ethers.formatEther(supply));
+        document.getElementById('mcap').textContent=mcap<1?mcap.toFixed(4)+' BNB':mcap.toFixed(2)+' BNB';
+      }
+    }catch(e){console.log('Price quote:',e)}
+    // Holders count via Transfer event logs (last 2000 blocks)
+    try{
+      const block=await provider.getBlockNumber();
+      const transferTopic=ethers.id('Transfer(address,address,uint256)');
+      const logs=await provider.getLogs({address:TOKEN_ADDR,topics:[transferTopic],fromBlock:block-2000,toBlock:block});
+      const holders=new Set();
+      for(const log of logs){
+        const to='0x'+log.topics[2].slice(26);
+        if(to!=='0x0000000000000000000000000000000000000000') holders.add(to);
+      }
+      if(holders.size>0) document.getElementById('holders').textContent=holders.size;
+    }catch(e){console.log('Holders:',e)}
     const len=Number(histLen);
     const tbody=document.getElementById('historyBody');
     tbody.innerHTML='';
+    let totalPaid=0n;
     if(len>0){
       const start=Math.max(0,len-10);
       for(let i=len-1;i>=start;i--){
@@ -271,17 +299,19 @@ async function loadOnChainData(){
         const addr=h[1],short=addr.slice(0,6)+'...'+addr.slice(-4);
         const prize=parseFloat(ethers.formatEther(h[2])).toFixed(4);
         const claimed=h[3]?'✅ Claimed':'⏳ Unclaimed';
+        if(h[3]) totalPaid+=h[2];
         tbody.innerHTML+=`<tr><td>#${h[0]}</td><td class="winner">${short}</td><td class="prize">${prize} BNB</td><td class="reasoning">${claimed}</td></tr>`;
       }
     }else{
       tbody.innerHTML='<tr><td colspan="4" style="text-align:center;color:#555">No draws yet 暂无开奖记录</td></tr>';
     }
+    document.getElementById('totalPrize').textContent=parseFloat(ethers.formatEther(totalPaid)).toFixed(4)+' BNB';
     // Show pending winner
     const pending=await vault.getPendingPrize();
     if(pending[0]!=='0x0000000000000000000000000000000000000000'&&!pending[2]){
       const short=pending[0].slice(0,6)+'...'+pending[0].slice(-4);
       const prize=parseFloat(ethers.formatEther(pending[1])).toFixed(4);
-      document.getElementById('totalPrize').textContent=short+' can claim '+prize+' BNB';
+      document.getElementById('totalPrize').textContent=parseFloat(ethers.formatEther(totalPaid)).toFixed(4)+' BNB ('+short+' can claim '+prize+')';
     }
   }catch(e){console.log('Chain data load:',e)}
 }
