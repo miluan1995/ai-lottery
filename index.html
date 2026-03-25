@@ -265,16 +265,38 @@ async function loadOnChainData(){
     document.getElementById('poolBalance').textContent=parseFloat(ethers.formatEther(poolData[0]+poolData[1])).toFixed(4)+' BNB';
     document.getElementById('nextPrize').textContent=parseFloat(ethers.formatEther(estPrize)).toFixed(4)+' BNB';
     document.getElementById('currentRound').textContent=round.toString();
-    // Price & MCap via Portal quote (1 BNB → how many tokens)
+    // Price & MCap via Portal reverse quote (token → BNB, more accurate)
     try{
-      const oneBNB=ethers.parseEther('1');
-      const tokensPerBNB=await portal.quoteExactInput([ethers.ZeroAddress,TOKEN_ADDR,oneBNB]);
-      if(tokensPerBNB>0n){
-        const price=1.0/parseFloat(ethers.formatEther(tokensPerBNB));
-        document.getElementById('price').textContent=price<0.0001?price.toExponential(2):price.toFixed(6)+' BNB';
+      const oneM=ethers.parseEther('1000000'); // quote 1M tokens → BNB
+      const bnbFor1M=await portal.quoteExactInput([TOKEN_ADDR,ethers.ZeroAddress,oneM]);
+      if(bnbFor1M>0n){
+        // price per token in BNB
+        const pricePerToken=Number(bnbFor1M)*1e-18/1e6;
+        // BNB/USD price from PancakeSwap WBNB/USDT pool
+        const WBNB='0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c';
+        const USDT='0x55d398326f99059fF775485246999027B3197955';
+        let bnbUsd=600; // fallback
+        try{
+          const oneB=ethers.parseEther('1');
+          const usdtFor1BNB=await portal.quoteExactInput([ethers.ZeroAddress,USDT,oneB]);
+          if(usdtFor1BNB>0n) bnbUsd=Number(usdtFor1BNB)*1e-18;
+        }catch(e){}
+        const priceUsd=pricePerToken*bnbUsd;
+        // Format price
+        if(priceUsd<0.001){
+          document.getElementById('price').textContent='$'+priceUsd.toExponential(2);
+        }else{
+          document.getElementById('price').textContent='$'+priceUsd.toFixed(6);
+        }
+        // MCap = price × totalSupply
         const supply=await token.totalSupply();
-        const mcap=price*parseFloat(ethers.formatEther(supply));
-        document.getElementById('mcap').textContent=mcap<1?mcap.toFixed(4)+' BNB':mcap.toFixed(2)+' BNB';
+        const supplyNum=Number(supply)/1e18;
+        const mcapUsd=priceUsd*supplyNum;
+        if(mcapUsd>=1000){
+          document.getElementById('mcap').textContent='$'+(mcapUsd/1000).toFixed(1)+'K';
+        }else{
+          document.getElementById('mcap').textContent='$'+mcapUsd.toFixed(0);
+        }
       }
     }catch(e){console.log('Price quote:',e)}
     // Holders — scan recent Transfer events (last 5000 blocks)
