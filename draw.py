@@ -10,7 +10,7 @@ from datetime import datetime, timezone
 
 RPC = "https://bsc-rpc.publicnode.com"
 VAULT = "0xBBccFD642a68F7040BaCAC74fCf4E501Fbf6b4e5"
-TOKEN = "0xD16D8869db7cf92101eb33072067418e9fDd7777"
+TOKEN = "0x50FE03558Abd4733393d516baDf93D1508377777"
 KNOWN_HOLDERS_FILE = os.path.join(os.path.dirname(__file__), "holders.json")
 ENV = {**os.environ, "ALL_PROXY": "socks5://127.0.0.1:1080"}
 
