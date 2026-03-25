@@ -172,6 +172,7 @@ footer .addrs{font-family:monospace;font-size:.8em;color:#444;margin:8px 0;word-
 <!-- Wallet Connect + Claim Section -->
 <section class="card" id="walletSection">
 <h2>🔗 Connect & Claim <span class="zh">连接钱包 & 领奖</span></h2>
+<p id="claimInfo" style="color:var(--neon3);font-size:1.1em;text-align:center;margin:8px 0"></p>
 <div style="text-align:center;padding:16px">
 <button id="connectBtn" onclick="connectWallet()" style="padding:14px 32px;background:linear-gradient(135deg,var(--neon2),var(--neon));border:none;border-radius:8px;color:#000;font-weight:700;font-size:1.1em;cursor:pointer">Connect Wallet 连接钱包</button>
 <div id="walletInfo" style="display:none;margin-top:16px">
@@ -276,18 +277,13 @@ async function loadOnChainData(){
         document.getElementById('mcap').textContent=mcap<1?mcap.toFixed(4)+' BNB':mcap.toFixed(2)+' BNB';
       }
     }catch(e){console.log('Price quote:',e)}
-    // Holders count via Transfer event logs (last 2000 blocks)
+    // Holders — use draw history unique winners as proxy (no getLogs rate limit)
     try{
-      const block=await provider.getBlockNumber();
-      const transferTopic=ethers.id('Transfer(address,address,uint256)');
-      const logs=await provider.getLogs({address:TOKEN_ADDR,topics:[transferTopic],fromBlock:block-2000,toBlock:block});
-      const holders=new Set();
-      for(const log of logs){
-        const to='0x'+log.topics[2].slice(26);
-        if(to!=='0x0000000000000000000000000000000000000000') holders.add(to);
-      }
-      if(holders.size>0) document.getElementById('holders').textContent=holders.size;
-    }catch(e){console.log('Holders:',e)}
+      const hSet=new Set();
+      const hLen=Number(histLen);
+      for(let i=0;i<hLen;i++){const h=await vault.getHistory(i);hSet.add(h[1])}
+      document.getElementById('holders').textContent=hSet.size>0?hSet.size+'+ (winners)':'—';
+    }catch(e){}
     const len=Number(histLen);
     const tbody=document.getElementById('historyBody');
     tbody.innerHTML='';
@@ -306,13 +302,18 @@ async function loadOnChainData(){
       tbody.innerHTML='<tr><td colspan="4" style="text-align:center;color:#555">No draws yet 暂无开奖记录</td></tr>';
     }
     document.getElementById('totalPrize').textContent=parseFloat(ethers.formatEther(totalPaid)).toFixed(4)+' BNB';
-    // Show pending winner
-    const pending=await vault.getPendingPrize();
-    if(pending[0]!=='0x0000000000000000000000000000000000000000'&&!pending[2]){
-      const short=pending[0].slice(0,6)+'...'+pending[0].slice(-4);
-      const prize=parseFloat(ethers.formatEther(pending[1])).toFixed(4);
-      document.getElementById('totalPrize').textContent=parseFloat(ethers.formatEther(totalPaid)).toFixed(4)+' BNB ('+short+' can claim '+prize+')';
-    }
+    // Show pending winner in claim section
+    try{
+      const pending=await vault.getPendingPrize();
+      const claimInfo=document.getElementById('claimInfo');
+      if(pending[0]!=='0x0000000000000000000000000000000000000000'&&!pending[2]){
+        const short=pending[0].slice(0,6)+'...'+pending[0].slice(-4);
+        const prize=parseFloat(ethers.formatEther(pending[1])).toFixed(4);
+        if(claimInfo) claimInfo.textContent='🏆 '+short+' can claim '+prize+' BNB';
+      }else{
+        if(claimInfo) claimInfo.textContent='';
+      }
+    }catch(e){}
   }catch(e){console.log('Chain data load:',e)}
 }
 loadOnChainData();setInterval(loadOnChainData,60000);
