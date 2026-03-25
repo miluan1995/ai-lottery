@@ -277,13 +277,16 @@ async function loadOnChainData(){
         document.getElementById('mcap').textContent=mcap<1?mcap.toFixed(4)+' BNB':mcap.toFixed(2)+' BNB';
       }
     }catch(e){console.log('Price quote:',e)}
-    // Holders — use draw history unique winners as proxy (no getLogs rate limit)
+    // Holders — scan recent Transfer events (last 5000 blocks)
     try{
+      const block=await provider.getBlockNumber();
+      const transferTopic=ethers.id('Transfer(address,address,uint256)');
+      const logs=await provider.getLogs({address:TOKEN_ADDR,topics:[transferTopic],fromBlock:Math.max(0,block-5000),toBlock:block});
       const hSet=new Set();
-      const hLen=Number(histLen);
-      for(let i=0;i<hLen;i++){const h=await vault.getHistory(i);hSet.add(h[1])}
-      document.getElementById('holders').textContent=hSet.size>0?hSet.size+'+ (winners)':'—';
-    }catch(e){}
+      const zero='0x'+'0'.repeat(64);
+      for(const l of logs){if(l.topics[2]&&l.topics[2]!==zero) hSet.add('0x'+l.topics[2].slice(26))}
+      document.getElementById('holders').textContent=hSet.size>0?hSet.size:'1+';
+    }catch(e){document.getElementById('holders').textContent='1+'}
     const len=Number(histLen);
     const tbody=document.getElementById('historyBody');
     tbody.innerHTML='';
