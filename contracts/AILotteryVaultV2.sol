@@ -71,9 +71,9 @@ contract AILotteryVaultV2 is VaultBase, FlapAIConsumerBase {
         _;
     }
 
-    constructor(uint256 _minBal, uint256 _cooldown) {
-        dev = msg.sender;
-        owner = msg.sender;
+    constructor(address _dev, uint256 _minBal, uint256 _cooldown) {
+        dev = _dev;
+        owner = _dev;
         minBal = _minBal;
         cooldown = _cooldown;
     }
