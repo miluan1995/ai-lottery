@@ -93,10 +93,10 @@ footer .addrs{font-family:monospace;font-size:.8em;color:#444;margin:8px 0;word-
 <section class="card">
 <h2>📊 Live Stats <span class="zh">实时数据</span></h2>
 <div class="stats">
-<div class="stat"><div class="val" id="price">$0.000042</div><div class="label">Price 价格</div></div>
-<div class="stat"><div class="val" id="mcap">$42,000</div><div class="label">Market Cap 市值</div></div>
-<div class="stat"><div class="val" id="holders">347</div><div class="label">Holders 持币人</div></div>
-<div class="stat"><div class="val" id="totalPrize">2.84 BNB</div><div class="label">Total Prizes Paid 累计奖金</div></div>
+<div class="stat"><div class="val" id="price">—</div><div class="label">Price 价格</div></div>
+<div class="stat"><div class="val" id="mcap">—</div><div class="label">Market Cap 市值</div></div>
+<div class="stat"><div class="val" id="holders">—</div><div class="label">Holders 持币人</div></div>
+<div class="stat"><div class="val" id="totalPrize">0 BNB</div><div class="label">Total Prizes Paid 累计奖金</div></div>
 </div>
 </section>
 
@@ -104,11 +104,11 @@ footer .addrs{font-family:monospace;font-size:.8em;color:#444;margin:8px 0;word-
 <section class="card">
 <h2>🏆 Prize Pool <span class="zh">奖池</span></h2>
 <div class="pool-display">
-<div class="pool-amount" id="poolBalance">1.247 BNB</div>
-<div class="pool-sub">Next Draw Prize 下期奖金: <strong id="nextPrize">0.748 BNB</strong> (60%)</div>
+<div class="pool-amount" id="poolBalance">0.0000 BNB</div>
+<div class="pool-sub">Next Draw Prize 下期奖金: <strong id="nextPrize">0.0000 BNB</strong> (60%)</div>
 <div class="countdown-label">⏰ Next Draw In 距下次开奖</div>
 <div class="countdown" id="countdown">00:00:00</div>
-<div class="pool-sub" style="font-size:.8em">Round 回合 #<span id="currentRound">28</span> | Pool never empties — 40% always stays 奖池永不归零</div>
+<div class="pool-sub" style="font-size:.8em">Round 回合 #<span id="currentRound">0</span> | Pool never empties — 40% always stays 奖池永不归零</div>
 </div>
 </section>
 
@@ -147,8 +147,8 @@ footer .addrs{font-family:monospace;font-size:.8em;color:#444;margin:8px 0;word-
 <p>Hold ≥ 3 rounds (3h): 1.5× chance<br>Hold ≥ 12 rounds (12h): 2.0× chance<br>Sell & rebuy = reset to 0<br>持币3期1.5倍，12期2倍，卖了归零。</p>
 </div>
 <div class="rule-item">
-<h3>🛡️ Anti-Dump 防砸盘</h3>
-<p>Selling within 10 min after draw: 20% tax (extra 10% goes to pool).<br>开奖后10分钟内卖出：20%税（额外10%进奖池）。</p>
+<h3>🛡️ Claim Window 领奖窗口</h3>
+<p>Winner must claim before next draw. Unclaimed prizes roll into next round's pool — growing jackpots!<br>赢家须在下次开奖前领取，未领取自动滚入下期奖池！</p>
 </div>
 </div>
 </section>
@@ -169,14 +169,31 @@ footer .addrs{font-family:monospace;font-size:.8em;color:#444;margin:8px 0;word-
 </div>
 </section>
 
+<!-- Wallet Connect + Claim Section -->
+<section class="card" id="walletSection">
+<h2>🔗 Connect & Claim <span class="zh">连接钱包 & 领奖</span></h2>
+<div style="text-align:center;padding:16px">
+<button id="connectBtn" onclick="connectWallet()" style="padding:14px 32px;background:linear-gradient(135deg,var(--neon2),var(--neon));border:none;border-radius:8px;color:#000;font-weight:700;font-size:1.1em;cursor:pointer">Connect Wallet 连接钱包</button>
+<div id="walletInfo" style="display:none;margin-top:16px">
+<p style="color:#888">Connected 已连接: <span id="connAddr" style="color:var(--neon);font-family:monospace"></span></p>
+<div id="claimBox" style="display:none;margin-top:16px;padding:16px;background:#1a1a3a;border-radius:8px;border:1px solid var(--neon3)">
+<p style="color:var(--neon3);font-size:1.2em;font-weight:700">🎉 You are the winner! 你是赢家！</p>
+<p style="margin:8px 0">Prize 奖金: <strong id="claimPrize" style="color:var(--neon)"></strong></p>
+<button onclick="claimPrize()" style="padding:12px 28px;background:var(--neon3);border:none;border-radius:8px;color:#000;font-weight:700;font-size:1em;cursor:pointer;margin-top:8px">Claim Prize 领取奖金</button>
+</div>
+<div id="notWinner" style="display:none;margin-top:16px;color:#888">Not the current winner. Hold and wait for next draw! 不是当前赢家，继续持币等下期！</div>
+</div>
+</div>
+</section>
+
 <!-- Footer -->
 <footer>
 <p>AI Lottery Token — Built on <a href="https://flap.sh" target="_blank">Flap.sh</a> 🦋 | BNB Chain (BSC)</p>
-<p class="addrs">Token: TBD | Vault: TBD | Oracle: TBD</p>
+<p class="addrs">Token: <a href="https://bscscan.com/token/0x79D2Dd48B679b38985b51fF00864a5696A387777" target="_blank">0x79D2Dd48B679b38985b51fF00864a5696A387777</a></p>
+<p class="addrs">Vault: <a href="https://bscscan.com/address/0x3e219c19D56982D02f1FB2ca76AcE87Dca959E4E" target="_blank">0x3e219c19D56982D02f1FB2ca76AcE87Dca959E4E</a></p>
 <p style="margin-top:8px">
-<a href="#" style="margin:0 10px">Twitter/X</a>
-<a href="#" style="margin:0 10px">Telegram</a>
-<a href="#" style="margin:0 10px">BSCScan</a>
+<a href="https://flap.sh/token/0x79D2Dd48B679b38985b51fF00864a5696A387777" style="margin:0 10px" target="_blank">Buy on Flap.sh 🦋</a>
+<a href="https://bscscan.com/token/0x79D2Dd48B679b38985b51fF00864a5696A387777" style="margin:0 10px" target="_blank">BSCScan</a>
 </p>
 <p style="margin-top:12px;color:#333">© 2026 AI Lottery. Powered by Butterfly Oracle.</p>
 </footer>
@@ -192,36 +209,97 @@ function updateCountdown(){
 }
 setInterval(updateCountdown,1000);updateCountdown();
 
-// Mock draw history
-const mockHistory=[
-  {r:27,w:'0x7a3B...F29d',p:'0.682 BNB',ai:'847h holding streak + sqrt(12.4 BNB) = top weighted score'},
-  {r:26,w:'0xE41c...8B02',p:'0.531 BNB',ai:'New entrant with high on-chain activity score (142 txns/7d)'},
-  {r:25,w:'0x3F9a...D1e7',p:'0.445 BNB',ai:'12-round diamond hands (2.0× bonus) + moderate balance'},
-  {r:24,w:'0xB82d...6A33',p:'0.398 BNB',ai:'Balanced profile: sqrt(5.2) weight × 1.5 holding bonus'},
-  {r:23,w:'0x1Cc0...9E4f',p:'0.372 BNB',ai:'Random factor favored this 8-round holder over larger wallets'},
-  {r:22,w:'0xD5eF...7B11',p:'0.341 BNB',ai:'Highest composite: balance×duration×activity all above median'},
-  {r:21,w:'0x92A1...C4d8',p:'0.289 BNB',ai:'Anti-whale sqrt weighting gave edge over 3 larger holders'},
-  {r:20,w:'0x6bE3...A507',p:'0.267 BNB',ai:'First-time winner after 20 consecutive rounds of holding'},
-  {r:19,w:'0xAa47...1F9c',p:'0.234 BNB',ai:'High activity (87 swaps) + 6-round hold = 1.5× multiplier'},
-  {r:18,w:'0x4D8b...E2a0',p:'0.201 BNB',ai:'Random selection from top-10 weighted candidates'},
-];
-const tbody=document.getElementById('historyBody');
-mockHistory.forEach(d=>{
-  tbody.innerHTML+=`<tr><td>#${d.r}</td><td class="winner">${d.w}</td><td class="prize">${d.p}</td><td class="reasoning">${d.ai}</td></tr>`;
-});
-
-// Bonus checker (mock)
+// Bonus checker (reads from chain in future, mock for now)
 function checkBonus(){
   const addr=document.getElementById('walletInput').value.trim();
   if(!addr||!addr.startsWith('0x')){alert('Please enter a valid address');return}
   const el=document.getElementById('bonusResult');el.classList.add('show');
-  // Mock: random holding data
-  const rounds=Math.floor(Math.random()*20)+1;
-  const hours=rounds;
-  const mult=rounds>=12?'2.0×':rounds>=3?'1.5×':'1.0×';
-  document.getElementById('holdDuration').textContent=hours+'h '+Math.floor(Math.random()*59)+'m';
-  document.getElementById('holdRounds').textContent=rounds+' rounds';
-  document.getElementById('holdMultiplier').textContent=mult;
+  document.getElementById('holdDuration').textContent='Coming soon';
+  document.getElementById('holdRounds').textContent='—';
+  document.getElementById('holdMultiplier').textContent='—';
+}
+
+<script src="https://cdn.jsdelivr.net/npm/ethers@6/dist/ethers.umd.min.js"></script>
+<script>
+const VAULT='0x3e219c19D56982D02f1FB2ca76AcE87Dca959E4E';
+const TOKEN='0x79D2Dd48B679b38985b51fF00864a5696A387777';
+const RPC='https://bsc-dataseed1.bnbchain.org';
+const VAULT_ABI=[
+  'function getPoolBalance() view returns (uint256 pool, uint256 reserve)',
+  'function getPendingPrize() view returns (address winner, uint256 prize, bool isClaimed, uint256 drawnAt)',
+  'function getCurrentRound() view returns (uint256)',
+  'function getHistoryLength() view returns (uint256)',
+  'function getHistory(uint256 idx) view returns (tuple(uint256 round, address winner, uint256 prize, bool claimed, uint256 timestamp))',
+  'function getEstimatedNextPrize() view returns (uint256)',
+  'function claim()'
+];
+const provider=new ethers.JsonRpcProvider(RPC);
+const vault=new ethers.Contract(VAULT,VAULT_ABI,provider);
+let signer=null;
+
+async function loadOnChainData(){
+  try{
+    const [poolData,round,estPrize,histLen]=await Promise.all([
+      vault.getPoolBalance(),vault.getCurrentRound(),vault.getEstimatedNextPrize(),vault.getHistoryLength()
+    ]);
+    const poolBNB=ethers.formatEther(poolData[0]);
+    const reserveBNB=ethers.formatEther(poolData[1]);
+    document.getElementById('poolBalance').textContent=parseFloat(poolBNB).toFixed(4)+' BNB';
+    document.getElementById('nextPrize').textContent=parseFloat(ethers.formatEther(estPrize)).toFixed(4)+' BNB';
+    document.getElementById('currentRound').textContent=round.toString();
+    // Load history
+    const len=Number(histLen);
+    if(len>0){
+      const tbody=document.getElementById('historyBody');
+      tbody.innerHTML='';
+      const start=Math.max(0,len-10);
+      for(let i=len-1;i>=start;i--){
+        const h=await vault.getHistory(i);
+        const addr=h[1];
+        const short=addr.slice(0,6)+'...'+addr.slice(-4);
+        const prize=parseFloat(ethers.formatEther(h[2])).toFixed(4);
+        const claimed=h[3]?'✅':'⏳';
+        tbody.innerHTML+=`<tr><td>#${h[0]}</td><td class="winner">${short}</td><td class="prize">${prize} BNB</td><td class="reasoning">${claimed}</td></tr>`;
+      }
+    }
+  }catch(e){console.log('Chain data load:',e)}
+}
+loadOnChainData();setInterval(loadOnChainData,60000);
+
+async function connectWallet(){
+  try{
+    if(!window.ethereum){alert('Please install MetaMask, OKX Wallet, or Binance Wallet');return}
+    const p=new ethers.BrowserProvider(window.ethereum);
+    await p.send('eth_requestAccounts',[]);
+    const net=await p.getNetwork();
+    if(net.chainId!==56n){
+      try{await p.send('wallet_switchEthereumChain',[{chainId:'0x38'}])}catch(e){alert('Please switch to BSC');return}
+    }
+    signer=await p.getSigner();
+    const addr=await signer.getAddress();
+    document.getElementById('connectBtn').style.display='none';
+    document.getElementById('walletInfo').style.display='block';
+    document.getElementById('connAddr').textContent=addr.slice(0,6)+'...'+addr.slice(-4);
+    // Check if winner
+    const pending=await vault.getPendingPrize();
+    if(pending[0].toLowerCase()===addr.toLowerCase()&&!pending[2]){
+      document.getElementById('claimBox').style.display='block';
+      document.getElementById('claimPrize').textContent=parseFloat(ethers.formatEther(pending[1])).toFixed(4)+' BNB';
+    }else{
+      document.getElementById('notWinner').style.display='block';
+    }
+  }catch(e){console.error(e);alert('Connection failed: '+e.message)}
+}
+
+async function claimPrize(){
+  try{
+    const v=new ethers.Contract(VAULT,VAULT_ABI,signer);
+    const tx=await v.claim();
+    alert('TX sent: '+tx.hash);
+    await tx.wait();
+    alert('Prize claimed! 🎉');
+    loadOnChainData();
+  }catch(e){alert('Claim failed: '+e.message)}
 }
 </script>
 </body>
