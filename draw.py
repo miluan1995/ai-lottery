@@ -9,7 +9,7 @@ import subprocess, json, sys, os
 from datetime import datetime, timezone
 
 RPC = "https://bsc-rpc.publicnode.com"
-VAULT = "0x13d031F2340D2b5Fb0e655513FaA265dB3f4eCCd"
+VAULT = "0x09166DB54A4cfc9041C1153c82Bd441CAfD8D3D9"
 TOKEN = "0x1983b612947306bcaf2392711dc24483be017777"
 KNOWN_HOLDERS_FILE = os.path.join(os.path.dirname(__file__), "holders.json")
 ENV = {**os.environ, "ALL_PROXY": "socks5://127.0.0.1:1080"}

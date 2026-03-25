@@ -149,15 +149,11 @@ contract AILotteryVaultV2 is VaultBase, FlapAIConsumerBase {
         _executeDraw(winner);
     }
 
-    // ── Internal: execute the draw ──
+    // ── Internal: execute the draw — auto-sends prize to winner ──
     function _executeDraw(address winner) internal {
-        // Expire unclaimed previous prize
-        if (currentWinner != address(0) && !claimed) {
-            currentPool += currentPrize;
-            history.push(DrawRecord(round, currentWinner, currentPrize, false, drawTimestamp));
-            emit PrizeExpired(round, currentWinner, currentPrize);
-        } else if (currentWinner != address(0) && claimed) {
-            history.push(DrawRecord(round, currentWinner, currentPrize, true, drawTimestamp));
+        // Save previous round to history
+        if (currentWinner != address(0)) {
+            history.push(DrawRecord(round, currentWinner, currentPrize, claimed, drawTimestamp));
         }
 
         // Roll reserve into pool
@@ -172,12 +168,18 @@ contract AILotteryVaultV2 is VaultBase, FlapAIConsumerBase {
         currentWinner = winner;
         currentPrize = prize;
         drawTimestamp = block.timestamp;
-        claimed = false;
 
+        // Auto-send prize to winner
+        (bool ok,) = payable(winner).call{value: prize}("");
+        claimed = ok;
+
+        if (ok) {
+            emit PrizeClaimed(round, winner, prize);
+        }
         emit WinnerDrawn(round, winner, prize);
     }
 
-    // ── Winner claims prize ──
+    // ── Fallback claim (if auto-send failed) ──
     function claim() external {
         if (currentWinner == address(0)) revert NoPendingPrize();
         if (msg.sender != currentWinner) revert NotWinner();
