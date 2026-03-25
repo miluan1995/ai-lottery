@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AI Lottery | First AI-Judged Lottery on BNB Chain</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--neon:#0ff;--neon2:#b400ff;--neon3:#0f0;--bg:#0a0a1a;--card:#12122a;--text:#e0e0e0}
+body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,sans-serif;overflow-x:hidden}
+a{color:var(--neon);text-decoration:none}
+
+/* Glow keyframes */
+@keyframes glow{0%,100%{text-shadow:0 0 10px var(--neon),0 0 40px var(--neon)}50%{text-shadow:0 0 20px var(--neon),0 0 80px var(--neon)}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.6}}
+@keyframes orbFloat{0%,100%{transform:translateY(0) rotate(0deg)}50%{transform:translateY(-20px) rotate(180deg)}}
+@keyframes borderGlow{0%,100%{border-color:var(--neon)}50%{border-color:var(--neon2)}}
+
+.container{max-width:900px;margin:0 auto;padding:0 20px}
+
+/* Hero */
+.hero{text-align:center;padding:60px 20px 40px;position:relative}
+.hero h1{font-size:3em;background:linear-gradient(90deg,var(--neon),var(--neon2),var(--neon3));-webkit-background-clip:text;-webkit-text-fill-color:transparent;animation:glow 3s infinite}
+.hero .tagline{font-size:1.1em;color:var(--neon);margin:10px 0 30px;opacity:.9}
+.orb{width:120px;height:120px;margin:0 auto 20px;border-radius:50%;background:radial-gradient(circle,var(--neon2),transparent 70%);box-shadow:0 0 60px var(--neon2),0 0 120px var(--neon);animation:orbFloat 4s ease-in-out infinite;display:flex;align-items:center;justify-content:center;font-size:2.5em}
+
+/* Cards */
+.card{background:var(--card);border:1px solid #333;border-radius:12px;padding:24px;margin:20px 0;position:relative;overflow:hidden}
+.card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--neon),var(--neon2),var(--neon3))}
+.card h2{font-size:1.4em;margin-bottom:16px;color:var(--neon)}
+.card h2 .zh{font-size:.7em;color:#888;margin-left:8px}
+
+/* Stats Grid */
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px}
+.stat{text-align:center;padding:16px;background:#1a1a3a;border-radius:8px;border:1px solid #2a2a4a}
+.stat .val{font-size:1.8em;font-weight:700;color:var(--neon3);animation:pulse 2s infinite}
+.stat .label{font-size:.85em;color:#999;margin-top:4px}
+
+/* Prize Pool */
+.pool-display{text-align:center;padding:20px}
+.pool-amount{font-size:3em;font-weight:700;color:var(--neon);animation:glow 3s infinite}
+.pool-sub{color:#999;margin:8px 0}
+.countdown{font-size:2.2em;font-weight:700;color:var(--neon2);margin:16px 0;font-family:monospace}
+.countdown-label{color:#888;font-size:.9em}
+
+/* History Table */
+.history-table{width:100%;border-collapse:collapse;font-size:.9em}
+.history-table th{text-align:left;padding:10px;color:var(--neon);border-bottom:1px solid #333;font-weight:600}
+.history-table td{padding:10px;border-bottom:1px solid #1a1a3a}
+.history-table tr:hover{background:#1a1a3a}
+.winner{color:var(--neon3);font-family:monospace}
+.prize{color:var(--neon);font-weight:600}
+.reasoning{color:#888;font-size:.85em;max-width:250px}
+
+/* Rules */
+.rules-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:600px){.rules-grid{grid-template-columns:1fr}}
+.rule-item{background:#1a1a3a;padding:16px;border-radius:8px;border-left:3px solid var(--neon2)}
+.rule-item h3{color:var(--neon2);font-size:1em;margin-bottom:8px}
+.rule-item p{font-size:.9em;color:#bbb;line-height:1.5}
+.tax-bar{display:flex;height:24px;border-radius:4px;overflow:hidden;margin:12px 0}
+.tax-bar div{display:flex;align-items:center;justify-content:center;font-size:.75em;font-weight:600;color:#000}
+.tax-pool{background:var(--neon);width:50%}
+.tax-next{background:var(--neon2);width:40%;color:#fff!important}
+.tax-dev{background:var(--neon3);width:10%}
+
+/* Bonus Check */
+.bonus-input{display:flex;gap:10px;margin:16px 0}
+.bonus-input input{flex:1;padding:12px;background:#1a1a3a;border:1px solid #333;border-radius:8px;color:var(--text);font-family:monospace;font-size:.9em}
+.bonus-input input:focus{outline:none;border-color:var(--neon);box-shadow:0 0 10px rgba(0,255,255,.2)}
+.bonus-input button{padding:12px 24px;background:linear-gradient(135deg,var(--neon2),var(--neon));border:none;border-radius:8px;color:#000;font-weight:700;cursor:pointer;white-space:nowrap}
+.bonus-result{padding:16px;background:#1a1a3a;border-radius:8px;display:none;margin-top:12px;animation:borderGlow 2s infinite;border:1px solid var(--neon)}
+.bonus-result.show{display:block}
+.multiplier{font-size:2em;color:var(--neon3);font-weight:700}
+
+/* Footer */
+footer{text-align:center;padding:40px 20px;color:#555;font-size:.85em;border-top:1px solid #1a1a3a;margin-top:40px}
+footer .addrs{font-family:monospace;font-size:.8em;color:#444;margin:8px 0;word-break:break-all}
+</style>
+</head>
+<body>
+<div class="container">
+
+<!-- Hero -->
+<section class="hero">
+<div class="orb">🎰</div>
+<h1>AI LOTTERY</h1>
+<p class="tagline">First AI-Judged Lottery on BNB Chain<br>首个 AI 裁判彩票代币</p>
+<p style="color:#888;font-size:.9em">Powered by Butterfly Oracle 🦋 on Flap.sh</p>
+</section>
+
+<!-- Live Stats -->
+<section class="card">
+<h2>📊 Live Stats <span class="zh">实时数据</span></h2>
+<div class="stats">
+<div class="stat"><div class="val" id="price">$0.000042</div><div class="label">Price 价格</div></div>
+<div class="stat"><div class="val" id="mcap">$42,000</div><div class="label">Market Cap 市值</div></div>
+<div class="stat"><div class="val" id="holders">347</div><div class="label">Holders 持币人</div></div>
+<div class="stat"><div class="val" id="totalPrize">2.84 BNB</div><div class="label">Total Prizes Paid 累计奖金</div></div>
+</div>
+</section>
+
+<!-- Prize Pool -->
+<section class="card">
+<h2>🏆 Prize Pool <span class="zh">奖池</span></h2>
+<div class="pool-display">
+<div class="pool-amount" id="poolBalance">1.247 BNB</div>
+<div class="pool-sub">Next Draw Prize 下期奖金: <strong id="nextPrize">0.748 BNB</strong> (60%)</div>
+<div class="countdown-label">⏰ Next Draw In 距下次开奖</div>
+<div class="countdown" id="countdown">00:00:00</div>
+<div class="pool-sub" style="font-size:.8em">Round 回合 #<span id="currentRound">28</span> | Pool never empties — 40% always stays 奖池永不归零</div>
+</div>
+</section>
+
+<!-- Draw History -->
+<section class="card">
+<h2>🎯 Draw History <span class="zh">开奖记录</span></h2>
+<div style="overflow-x:auto">
+<table class="history-table">
+<thead><tr><th>#</th><th>Winner 赢家</th><th>Prize 奖金</th><th>AI Reasoning AI推理</th></tr></thead>
+<tbody id="historyBody"></tbody>
+</table>
+</div>
+</section>
+
+<!-- Rules -->
+<section class="card">
+<h2>📜 Rules <span class="zh">规则</span></h2>
+<h3 style="color:#999;margin-bottom:8px">Tax Distribution 税收分配 (10%)</h3>
+<div class="tax-bar">
+<div class="tax-pool">5% Pool 奖池</div>
+<div class="tax-next">4% Next Round 下期</div>
+<div class="tax-dev">1%</div>
+</div>
+<p style="font-size:.85em;color:#888;margin-bottom:16px">5% → Current Pool | 4% → Next Round Reserve | 1% → Dev</p>
+<div class="rules-grid">
+<div class="rule-item">
+<h3>🎰 Draw Mechanics 开奖机制</h3>
+<p>Every hour, AI Oracle selects 1 winner. Prize = 60% of pool, sent directly. 40% stays as base for next round.<br>每小时 AI 开奖，奖金=奖池60%直发，40%留底。</p>
+</div>
+<div class="rule-item">
+<h3>🧠 AI Selection AI选人</h3>
+<p>Sqrt-weighted balance (anti-whale) + holding duration + on-chain activity + random factor.<br>持币量开根号（防鲸鱼）+ 持币时间 + 链上活跃度 + 随机因子。</p>
+</div>
+<div class="rule-item">
+<h3>💎 Holding Bonus 持币加成</h3>
+<p>Hold ≥ 3 rounds (3h): 1.5× chance<br>Hold ≥ 12 rounds (12h): 2.0× chance<br>Sell & rebuy = reset to 0<br>持币3期1.5倍，12期2倍，卖了归零。</p>
+</div>
+<div class="rule-item">
+<h3>🛡️ Anti-Dump 防砸盘</h3>
+<p>Selling within 10 min after draw: 20% tax (extra 10% goes to pool).<br>开奖后10分钟内卖出：20%税（额外10%进奖池）。</p>
+</div>
+</div>
+</section>
+
+<!-- Check Bonus -->
+<section class="card">
+<h2>🔍 Check My Bonus <span class="zh">查询我的加成</span></h2>
+<div class="bonus-input">
+<input type="text" id="walletInput" placeholder="Enter your wallet address 输入钱包地址 0x...">
+<button onclick="checkBonus()">Check 查询</button>
+</div>
+<div class="bonus-result" id="bonusResult">
+<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">
+<div><div style="color:#888;font-size:.85em">Holding Duration 持币时长</div><div style="font-size:1.3em" id="holdDuration">—</div></div>
+<div><div style="color:#888;font-size:.85em">Rounds Held 持有期数</div><div style="font-size:1.3em" id="holdRounds">—</div></div>
+<div><div style="color:#888;font-size:.85em">Your Multiplier 你的倍率</div><div class="multiplier" id="holdMultiplier">—</div></div>
+</div>
+</div>
+</section>
+
+<!-- Footer -->
+<footer>
+<p>AI Lottery Token — Built on <a href="https://flap.sh" target="_blank">Flap.sh</a> 🦋 | BNB Chain (BSC)</p>
+<p class="addrs">Token: TBD | Vault: TBD | Oracle: TBD</p>
+<p style="margin-top:8px">
+<a href="#" style="margin:0 10px">Twitter/X</a>
+<a href="#" style="margin:0 10px">Telegram</a>
+<a href="#" style="margin:0 10px">BSCScan</a>
+</p>
+<p style="margin-top:12px;color:#333">© 2026 AI Lottery. Powered by Butterfly Oracle.</p>
+</footer>
+
+</div>
+
+<script>
+// Countdown timer (1h cycle)
+function updateCountdown(){
+  const now=Date.now(),cycle=3600000,elapsed=now%cycle,remaining=cycle-elapsed;
+  const h=Math.floor(remaining/3600000),m=Math.floor((remaining%3600000)/60000),s=Math.floor((remaining%60000)/1000);
+  document.getElementById('countdown').textContent=String(h).padStart(2,'0')+':'+String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
+}
+setInterval(updateCountdown,1000);updateCountdown();
+
+// Mock draw history
+const mockHistory=[
+  {r:27,w:'0x7a3B...F29d',p:'0.682 BNB',ai:'847h holding streak + sqrt(12.4 BNB) = top weighted score'},
+  {r:26,w:'0xE41c...8B02',p:'0.531 BNB',ai:'New entrant with high on-chain activity score (142 txns/7d)'},
+  {r:25,w:'0x3F9a...D1e7',p:'0.445 BNB',ai:'12-round diamond hands (2.0× bonus) + moderate balance'},
+  {r:24,w:'0xB82d...6A33',p:'0.398 BNB',ai:'Balanced profile: sqrt(5.2) weight × 1.5 holding bonus'},
+  {r:23,w:'0x1Cc0...9E4f',p:'0.372 BNB',ai:'Random factor favored this 8-round holder over larger wallets'},
+  {r:22,w:'0xD5eF...7B11',p:'0.341 BNB',ai:'Highest composite: balance×duration×activity all above median'},
+  {r:21,w:'0x92A1...C4d8',p:'0.289 BNB',ai:'Anti-whale sqrt weighting gave edge over 3 larger holders'},
+  {r:20,w:'0x6bE3...A507',p:'0.267 BNB',ai:'First-time winner after 20 consecutive rounds of holding'},
+  {r:19,w:'0xAa47...1F9c',p:'0.234 BNB',ai:'High activity (87 swaps) + 6-round hold = 1.5× multiplier'},
+  {r:18,w:'0x4D8b...E2a0',p:'0.201 BNB',ai:'Random selection from top-10 weighted candidates'},
+];
+const tbody=document.getElementById('historyBody');
+mockHistory.forEach(d=>{
+  tbody.innerHTML+=`<tr><td>#${d.r}</td><td class="winner">${d.w}</td><td class="prize">${d.p}</td><td class="reasoning">${d.ai}</td></tr>`;
+});
+
+// Bonus checker (mock)
+function checkBonus(){
+  const addr=document.getElementById('walletInput').value.trim();
+  if(!addr||!addr.startsWith('0x')){alert('Please enter a valid address');return}
+  const el=document.getElementById('bonusResult');el.classList.add('show');
+  // Mock: random holding data
+  const rounds=Math.floor(Math.random()*20)+1;
+  const hours=rounds;
+  const mult=rounds>=12?'2.0×':rounds>=3?'1.5×':'1.0×';
+  document.getElementById('holdDuration').textContent=hours+'h '+Math.floor(Math.random()*59)+'m';
+  document.getElementById('holdRounds').textContent=rounds+' rounds';
+  document.getElementById('holdMultiplier').textContent=mult;
+}
+</script>
+</body>
+</html>
