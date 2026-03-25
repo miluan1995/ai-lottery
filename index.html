@@ -189,11 +189,11 @@ footer .addrs{font-family:monospace;font-size:.8em;color:#444;margin:8px 0;word-
 <!-- Footer -->
 <footer>
 <p>AI Lottery Token — Built on <a href="https://flap.sh" target="_blank">Flap.sh</a> 🦋 | BNB Chain (BSC)</p>
-<p class="addrs">Token: <a href="https://bscscan.com/token/0x79D2Dd48B679b38985b51fF00864a5696A387777" target="_blank">0x79D2Dd48B679b38985b51fF00864a5696A387777</a></p>
-<p class="addrs">Vault: <a href="https://bscscan.com/address/0x3e219c19D56982D02f1FB2ca76AcE87Dca959E4E" target="_blank">0x3e219c19D56982D02f1FB2ca76AcE87Dca959E4E</a></p>
+<p class="addrs">Token: <a href="https://bscscan.com/token/0x10D5019dB399adcc83097732795fe931a3B21537" target="_blank">0x10D5019dB399adcc83097732795fe931a3B21537</a></p>
+<p class="addrs">Deployer: 0xD82913909e136779E854302E783ecdb06bfc7Ee2</p>
 <p style="margin-top:8px">
-<a href="https://flap.sh/token/0x79D2Dd48B679b38985b51fF00864a5696A387777" style="margin:0 10px" target="_blank">Buy on Flap.sh 🦋</a>
-<a href="https://bscscan.com/token/0x79D2Dd48B679b38985b51fF00864a5696A387777" style="margin:0 10px" target="_blank">BSCScan</a>
+<a href="https://pancakeswap.finance/swap?outputCurrency=0x10D5019dB399adcc83097732795fe931a3B21537" style="margin:0 10px" target="_blank">Buy on PancakeSwap 🥞</a>
+<a href="https://bscscan.com/address/0x10D5019dB399adcc83097732795fe931a3B21537" style="margin:0 10px" target="_blank">BSCScan</a>
 </p>
 <p style="margin-top:12px;color:#333">© 2026 AI Lottery. Powered by Butterfly Oracle.</p>
 </footer>
@@ -209,28 +209,45 @@ function updateCountdown(){
 }
 setInterval(updateCountdown,1000);updateCountdown();
 
-// Bonus checker (reads from chain in future, mock for now)
-function checkBonus(){
+// Bonus checker (on-chain)
+async function checkBonus(){
   const addr=document.getElementById('walletInput').value.trim();
   if(!addr||!addr.startsWith('0x')){alert('Please enter a valid address');return}
   const el=document.getElementById('bonusResult');el.classList.add('show');
-  document.getElementById('holdDuration').textContent='Coming soon';
-  document.getElementById('holdRounds').textContent='—';
-  document.getElementById('holdMultiplier').textContent='—';
+  try{
+    const [since,multBps]=await vault.getHoldingBonus(addr);
+    const bal=await vault.balanceOf(addr);
+    if(Number(since)===0||bal===0n){
+      document.getElementById('holdDuration').textContent='Not holding';
+      document.getElementById('holdRounds').textContent='0';
+      document.getElementById('holdMultiplier').textContent='1.0×';
+    }else{
+      const hrs=Math.floor((Date.now()/1000-Number(since))/3600);
+      document.getElementById('holdDuration').textContent=hrs+'h';
+      document.getElementById('holdRounds').textContent=Math.floor(hrs)+'';
+      document.getElementById('holdMultiplier').textContent=(Number(multBps)/10000).toFixed(1)+'×';
+    }
+  }catch(e){
+    document.getElementById('holdDuration').textContent='Error';
+    document.getElementById('holdRounds').textContent='—';
+    document.getElementById('holdMultiplier').textContent='—';
+  }
 }
 
 <script src="https://cdn.jsdelivr.net/npm/ethers@6/dist/ethers.umd.min.js"></script>
 <script>
-const VAULT='0x3e219c19D56982D02f1FB2ca76AcE87Dca959E4E';
-const TOKEN='0x79D2Dd48B679b38985b51fF00864a5696A387777';
+const TOKEN='0x10D5019dB399adcc83097732795fe931a3B21537';
+const VAULT=TOKEN; // token has built-in lottery pool
 const RPC='https://bsc-dataseed1.bnbchain.org';
 const VAULT_ABI=[
   'function getPoolBalance() view returns (uint256 pool, uint256 reserve)',
   'function getPendingPrize() view returns (address winner, uint256 prize, bool isClaimed, uint256 drawnAt)',
   'function getCurrentRound() view returns (uint256)',
   'function getHistoryLength() view returns (uint256)',
-  'function getHistory(uint256 idx) view returns (tuple(uint256 round, address winner, uint256 prize, bool claimed, uint256 timestamp))',
+  'function getHistory(uint256 idx) view returns (tuple(uint256 round, address winner, uint256 prize, bool claimed, uint256 ts))',
   'function getEstimatedNextPrize() view returns (uint256)',
+  'function getHoldingBonus(address) view returns (uint256 since, uint256 multiplierBps)',
+  'function balanceOf(address) view returns (uint256)',
   'function claim()'
 ];
 const provider=new ethers.JsonRpcProvider(RPC);
